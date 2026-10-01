@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071523">
+  <meta name="description" content="EventLens：可审计的事件驱动投研任务工作台。构造数据演示，展示证据链、故障降级与人工确认。">
+  <title>EventLens｜事件驱动投研工作台</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23071523'/%3E%3Cpath d='M13 44h38M16 34l11-11 9 8 12-17' fill='none' stroke='%233bd6c6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">E<span></span></span><div><strong>EventLens</strong><small>事件驱动投研工作台</small></div></div>
+      <div class="header-tags"><span class="header-tag">AIME 产品笔试原型</span><span class="header-tag warn">构造数据 · 非实时</span></div>
+      <a class="header-help" href="#about">产品机制</a>
+    </header>
+
+    <main>
+      <section class="workspace-heading" aria-labelledby="page-title">
+        <div><p class="eyebrow">INVESTMENT RESEARCH / 01</p><h1 id="page-title">从一条事件，走到可核查的研究判断</h1><p>输入事件，查看证据、推断边界与后续跟踪。当前版本使用本地编排和构造样例；未连接实时金融数据或大模型。</p></div>
+        <div class="session-stamp"><span>当前任务</span><strong id="task-status">待开始</strong><small id="task-time">—</small></div>
+      </section>
+
+      <section class="workspace-grid" aria-label="事件研究工作台">
+        <aside class="panel task-panel">
+          <div class="panel-title"><div><span class="section-number">01</span><h2>任务输入</h2></div><span id="mode-chip" class="mode-chip">构造样例</span></div>
+          <form id="task-form">
+            <label for="event-input">事件 / 研究问题</label>
+            <textarea id="event-input" rows="6" placeholder="例如：某公司发布业绩预告修正公告，我需要先核查什么？"></textarea>
+            <div class="source-fields" id="source-fields" hidden>
+              <div class="field-intro">自定义事件材料 <span>可选，默认视为未核验</span></div>
+              <label for="source-title">材料标题</label><input id="source-title" placeholder="公告或新闻标题">
+              <label for="source-url">原文链接</label><input id="source-url" type="url" placeholder="https://...">
+              <label for="source-date">发布时间</label><input id="source-date" type="date">
+              <label for="source-excerpt">原文摘录</label><textarea id="source-excerpt" rows="4" placeholder="粘贴需要核查的原文片段"></textarea>
+            </div>
+            <div class="input-actions"><button id="demo-button" class="button button-secondary" type="button">载入示例任务</button><button class="button button-primary" type="submit">运行研究任务</button></div>
+          </form>
+            <div class="scenario-box"><div class="field-intro">故障演练 <span>只作用于构造样例</span></div><div class="scenario-options" role="group" aria-label="故障场景"><button type="button" class="scenario active" data-scenario="normal" aria-pressed="true">正常</button><button type="button" class="scenario" data-scenario="missing" aria-pressed="false">原文缺失</button><button type="button" class="scenario" data-scenario="conflict" aria-pressed="false">数据冲突</button><button type="button" class="scenario" data-scenario="failure" aria-pressed="false">接口失败</button><button type="button" class="scenario" data-scenario="stale" aria-pressed="false">数据过期</button></div></div>
+          <div class="input-footnote"><strong>数据使用说明</strong><p>示例公司、财务与行情均为构造数据。自定义材料只会进入“待核验”状态，不会被包装成已证实市场事实。</p></div>
+        </aside>
+
+        <section class="panel result-panel" aria-labelledby="result-heading">
+          <div class="panel-title result-title"><div><span class="section-number">02</span><h2 id="result-heading">研究结果</h2></div><button id="export-button" class="text-button" type="button">导出纪要</button></div>
+          <div id="result-banner" class="result-banner" aria-live="polite"></div>
+          <div class="metric-row" id="metric-row"></div>
+          <div class="result-tabs" role="tablist" aria-label="结果视图"><button class="tab active" type="button" data-tab="analysis" role="tab" aria-selected="true">影响分析</button><button class="tab" type="button" data-tab="evidence" role="tab" aria-selected="false">证据链 <span id="evidence-count"></span></button><button class="tab" type="button" data-tab="followup" role="tab" aria-selected="false">跟踪清单</button></div>
+          <div id="analysis-view" class="tab-view"></div>
+          <div id="evidence-view" class="tab-view" hidden></div>
+          <div id="followup-view" class="tab-view" hidden></div>
+        </section>
+
+        <aside class="panel audit-panel">
+          <div class="panel-title"><div><span class="section-number">03</span><h2>执行轨迹</h2></div><span class="audit-live">可审计</span></div>
+          <p class="audit-intro">每一步的来源与异常都保留在任务中，结论发布前经过引用校验。</p>
+          <ol id="trace-list" class="trace-list"></ol>
+          <div class="audit-divider"></div>
+          <div class="panel-subtitle"><h3>本次质量检查</h3><span>任务级</span></div>
+          <div id="quality-list" class="quality-list"></div>
+          <div class="audit-bottom"><span>模型接入状态</span><strong>未配置 · 本地编排演示</strong></div>
+        </aside>
+      </section>
+
+      <section class="below-grid" id="about">
+        <article class="below-card"><span class="section-number">04</span><h2>为什么是 Agent 工作流</h2><p>一个事件往往需要公告、财务、行情与行业信息交叉核验。产品把“规划、工具调用、校验、失败恢复、人工确认”组织成可追踪任务。模型适合解析原文和生成待验证假设；数值与来源由确定性规则守门。</p></article>
+        <article class="below-card"><span class="section-number">05</span><h2>验证什么价值</h2><p>以“有证据且用户确认的有效任务数”为北极星。试点对比手工检索，衡量完成时间、引用覆盖、重大事实错误、工具失败透明率与跟踪项采纳率。页面数字仅代表本次构造任务，不代表试点成果。</p></article>
+        <article class="below-card risk-card"><span class="section-number">06</span><h2>风险边界</h2><p>事实、推断、未知分别呈现；缺失、冲突、过期和失败不得静默通过。不输出确定性涨跌预测、收益承诺或直接买卖指令。实际部署须先完成数据授权、模型密钥与合规核验。</p></article>
+      </section>
+    </main>
+    <footer>EventLens · 2026 · 构造样例用于产品机制演示，不构成投资建议。</footer>
+  </div>
+</body>
+</html>
+
